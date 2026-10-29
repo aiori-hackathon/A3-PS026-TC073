@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>Unicode &amp; Encoding Tools</h1>
+<div class="panel">
+  <label for="enc-text">Text or URI fragment</label>
+  <input id="enc-text" type="text" value="at://did:plc:abc123/col/café%2Fbar">
+  <button class="btn primary" id="btn-enc">Analyze</button>
+</div>
+<div id="enc-output" class="hidden">
+  <h2>Percent encoding</h2>
+  <pre id="enc-percent"></pre>
+  <h2>Unicode normalization</h2>
+  <pre id="enc-unicode"></pre>
+</div>
+{% endblock %}
