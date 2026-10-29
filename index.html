@@ -1,0 +1,29 @@
+{% extends "base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>AT URI Syntax Compatibility &amp; Round-Trip Validator</h1>
+  <p class="lead">
+    Validate AT Protocol URIs under four distinguishable parsing strategies,
+    detect parser disagreements, quantify round-trip information loss, and
+    inspect encoding and Unicode edge cases — all computed live.
+  </p>
+  <div class="hero-actions">
+    <a class="btn primary" href="/simulator">Start Testing</a>
+    <a class="btn" href="/dashboard">View Dashboard</a>
+  </div>
+</section>
+<section class="grid-3">
+  <div class="card"><h3>Validator</h3><p>Syntax validation with clear pass/fail
+    reasoning for authority, collection, and record key.</p></div>
+  <div class="card"><h3>4 Parsing Strategies</h3><p>Standard, Strict, Compatibility,
+    and RFC-3986 strategies expose real disagreements on DID internal colons.</p></div>
+  <div class="card"><h3>Round-Trip</h3><p>Reconstruct the URI from parsed
+    components and detect exact, structural, and semantic loss.</p></div>
+  <div class="card"><h3>Encoding</h3><p>Percent-escape validity, delimiter
+    detection, and decoded-vs-encoded comparison.</p></div>
+  <div class="card"><h3>Unicode</h3><p>NFC vs NFD normalization, code-point
+    diffs, and byte-level comparison.</p></div>
+  <div class="card"><h3>110-Case Corpus</h3><p>Searchable library of authored
+    test cases across every category, executed live.</p></div>
+</section>
+{% endblock %}

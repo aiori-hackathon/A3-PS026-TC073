@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}AT URI Validator{% endblock %}</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+<header class="site-header">
+  <a class="brand" href="/">AT&nbsp;URI&nbsp;Validator</a>
+  <nav>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/simulator">Simulator</a>
+    <a href="/compare">Compare</a>
+    <a href="/batch">Batch</a>
+    <a href="/library">Library</a>
+    <a href="/conflicts">Conflicts</a>
+    <a href="/roundtrip">Round-Trip</a>
+    <a href="/encoding">Encoding</a>
+    <a href="/reports">Reports</a>
+    <a href="/docs">Docs</a>
+  </nav>
+</header>
+<main>
+  {% block content %}{% endblock %}
+</main>
+<footer>
+  <p>Built with Flask + vanilla JS. All results computed live.</p>
+</footer>
+<script src="{{ url_for('static', filename='app.js') }}"></script>
+</body>
+</html>
