@@ -36,7 +36,6 @@
 
 **Understand how AT Protocol identifiers are interpreted, validated and reconstructed by different parsing strategies.**
 
-<sub>VISUAL SYSTEM · MIDNIGHT NAVY / ELECTRIC BLUE / CYAN · TECHNICAL DIAGRAMS / STRUCTURED DATA / REPRODUCIBLE ANALYSIS</sub>
 
 <p>
   <img src="https://img.shields.io/badge/INPUT-07111F?style=flat-square&labelColor=0E7490" alt="Input"/>
@@ -45,7 +44,6 @@
   <img src="https://img.shields.io/badge/OUTPUT-07111F?style=flat-square&labelColor=0891B2" alt="Output"/>
 </p>
 
-<sub>DESIGN LANGUAGE · DARK GRAPHITE · MIDNIGHT NAVY · ELECTRIC CYAN · MONOSPACED TECHNICAL DIAGRAMS</sub>
 
 </div>
 
@@ -55,7 +53,7 @@
 # CONTENTS
 
 <details open>
-<summary><strong>Full navigation — 24 sections and all subtopics</strong></summary>
+<summary><strong>Explore the project documentation — concepts, architecture, implementation, testing, and API reference</strong></summary>
 
 - **[Project Overview](#project-overview)**
   - [Project at a glance](#project-at-a-glance)
@@ -1769,4 +1767,3 @@ AIORI Hackathon 3 · 6G & Future Networks
 <a href="https://github.com/aiori-hackathon/A3-PS026-TC073">GitHub Repository</a>
 
 </div>
-
