@@ -429,88 +429,74 @@ The following architecture follows the supplied final architecture diagram. It s
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
 flowchart TB
     IN["TEST CORPUS MANAGER<br/>100+ valid / invalid / edge-case URIs"]
-
-    subgraph L0["LAYER 0 — INTAKE"]
-      GATE["INTAKE GATE<br/>Bytes → Codepoints → Graphemes<br/>NFC / NFD snapshot"]
-    end
+    GATE["LAYER 0 — INTAKE GATE<br/>Bytes → Codepoints → Graphemes<br/>NFC / NFD snapshot"]
+    IN --> GATE
 
     subgraph L1["LAYER 1 — AT URI LENSES"]
+      direction TB
       URI["AT URI LENS<br/>AT Protocol syntax"]
       DID["DID LENS<br/>W3C DID Core"]
       NSID["NSID LENS<br/>Collection rules"]
       HANDLE["HANDLE LENS<br/>DNS + IDN"]
       RKEY["RECORD KEY LENS<br/>Record-key rules"]
     end
-
-    subgraph GP["GENERIC PARSER COMPARISON"]
-      PA["PARSER A<br/>RFC 3986 lens<br/>Strict grammar"]
-      PB["PARSER B<br/>Generic parser adapter<br/>urllib.parse / WHATWG URL"]
-    end
-
-    subgraph L2["LAYER 2 — COMPATIBILITY"]
-      ALIGN["INTERVAL / OFFSET ALIGNMENT<br/>Character-level comparison<br/>Named conflicts"]
-    end
-
-    subgraph L3["LAYER 3 — CONFLICT FORGE"]
-      CF["CONFLICT CLASSIFIER<br/>Eight conflict categories"]
-    end
-
-    subgraph TE["TRANSFORMATION ENGINE"]
-      TA["TRANSFORM A<br/>AT-aware normalization<br/>Preserve DID colons"]
-      TB["TRANSFORM B<br/>Generic normalization<br/>RFC-oriented representation"]
-      REBUILD["REBUILT URI CANDIDATES"]
-      TA --> REBUILD
-      TB --> REBUILD
-    end
-
-    subgraph L4["LAYER 4 — ROUND-TRIP"]
-      RT["ROUND-TRIP LOOM<br/>Path A + Path B<br/>Fingerprint comparison"]
-    end
-
-    subgraph L6["LAYER 6 — AUTOMATED"]
-      RUN["TEST RUNNER<br/>Five-stage pipeline"]
-    end
-
-    subgraph FUTURE["OPTIONAL ADVANCED — FUTURE WORK"]
-      ORACLE["SPEC ORACLE"]
-      VAULT["TIME VAULT"]
-      SHIELD["SHIELD"]
-    end
-
-    REPORT["LAYER 7 — REPORT<br/>Case results · Metrics · Explanations"]
-
-    IN --> GATE
     GATE --> URI
     GATE --> DID
     GATE --> NSID
     GATE --> HANDLE
     GATE --> RKEY
 
+    subgraph GP["GENERIC PARSER COMPARISON"]
+      direction TB
+      PA["PARSER A<br/>RFC 3986 lens<br/>Strict grammar"]
+      PB["PARSER B<br/>Generic parser adapter<br/>urllib.parse / WHATWG URL"]
+    end
     URI --> PA
     DID --> PA
     NSID --> PA
     HANDLE --> PA
     RKEY --> PA
-
     URI --> PB
     DID --> PB
     NSID --> PB
     HANDLE --> PB
     RKEY --> PB
 
+    ALIGN["LAYER 2 — COMPATIBILITY ALIGNMENT<br/>Character offsets · Component comparison"]
     PA --> ALIGN
     PB --> ALIGN
+    CF["LAYER 3 — CONFLICT FORGE<br/>Classify eight conflict categories"]
     ALIGN --> CF
+
+    subgraph TE["TRANSFORMATION ENGINE"]
+      direction TB
+      TA["TRANSFORM A<br/>AT-aware normalization<br/>Preserve DID colons"]
+      TB["TRANSFORM B<br/>Generic normalization<br/>RFC-oriented representation"]
+      REBUILD["REBUILT URI CANDIDATES"]
+      TA --> REBUILD
+      TB --> REBUILD
+    end
     CF --> TA
     CF --> TB
+
+    RT["LAYER 4 — ROUND-TRIP LOOM<br/>Path A + Path B<br/>Fingerprint / exact-string comparison"]
     REBUILD --> RT
+    RUN["LAYER 6 — AUTOMATED TEST RUNNER<br/>Execute corpus · classify outcomes"]
     RT --> RUN
     CF --> RUN
-    RUN --> REPORT
 
-    ORACLE -. future reference .-> CF
-    VAULT -. historical data .-> CF
-    SHIELD -. future policy checks .-> CF
+    subgraph FUTURE["OPTIONAL ADVANCED — FUTURE WORK"]
+      direction TB
+      ORACLE["SPEC ORACLE"]
+      VAULT["TIME VAULT"]
+      SHIELD["SHIELD"]
+    end
+    ORACLE -. "Pinned specification reference" .-> CF
+    VAULT -. "Historical parser / test data" .-> CF
+    SHIELD -. "Additional policy checks" .-> CF
+
+    REPORT["LAYER 7 — REPORT<br/>Case results · Metrics · Explanations"]
+    RUN --> REPORT
 
     style IN fill:#0B1F3A,color:#fff
     style GATE fill:#1D4ED8,color:#fff
@@ -518,6 +504,7 @@ flowchart TB
     style RT fill:#155E75,color:#fff
     style RUN fill:#0E7490,color:#fff
     style REPORT fill:#123B63,color:#fff
+
 ```
 
 ## Layer responsibilities
@@ -1058,16 +1045,19 @@ STOP
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
-flowchart LR
+flowchart TB
     USER["USER / DEVELOPER"]
     CORPUS["TEST CORPUS"]
     SYSTEM(("AT URI<br/>COMPATIBILITY<br/>VALIDATOR"))
-    REPORT["REPORTS / DASHBOARD"]
+    RESULT["VALIDATION RESULT<br/>Conflict details · Round-trip status"]
+    REPORT["REPORTS / DASHBOARD<br/>JSON · CSV · HTML"]
 
-    USER -->|"URI input / requests"| SYSTEM
+    USER -->|"URI input / run request"| SYSTEM
     CORPUS -->|"Test cases"| SYSTEM
-    SYSTEM -->|"Validation and conflict results"| USER
-    SYSTEM -->|"JSON / CSV / HTML"| REPORT
+    SYSTEM -->|"Validation and conflict results"| RESULT
+    RESULT -->|"Displayed analysis"| USER
+    SYSTEM -->|"Generated report data"| REPORT
+
 ```
 
 **Explanation:** The user submits an individual URI or runs the test corpus. The validator analyses the input and returns the results through the web interface or generated reports.
@@ -1083,24 +1073,25 @@ flowchart TB
     D3[("D3 — Conflict Results")]
     D4[("D4 — Report Output")]
 
-    P1(("1.0<br/>INPUT"))
-    P2(("2.0<br/>PARSING"))
-    P3(("3.0<br/>ANALYSIS"))
-    P4(("4.0<br/>RECONSTRUCTION"))
-    P5(("5.0<br/>REPORTING"))
+    P1(("1.0 — INPUT"))
+    P2(("2.0 — PARSING"))
+    P3(("3.0 — ANALYSIS"))
+    P4(("4.0 — RECONSTRUCTION"))
+    P5(("5.0 — REPORTING"))
 
     U -->|"URI / run request"| P1
     D1 -->|"Corpus cases"| P1
-    P1 -->|"Prepared input"| P2
+    P1 -->|"Prepared original input"| P2
     P2 -->|"Strategy outputs"| D2
     P2 -->|"Parser results"| P3
-    P3 -->|"Conflicts"| D3
+    P3 -->|"Conflict records"| D3
     P3 -->|"Parsed components"| P4
-    P4 -->|"Reconstructed URI and comparison"| P5
-    D2 --> P5
-    D3 --> P5
+    P4 -->|"Reconstructed URI / comparison"| P5
+    D2 -->|"Parse evidence"| P5
+    D3 -->|"Conflict evidence"| P5
     P5 -->|"JSON / CSV / HTML"| D4
-    P5 -->|"Results"| U
+    P5 -->|"Results and status"| U
+
 ```
 
 ## 16.3 Level 2 — Parsing and Conflict Analysis
@@ -1108,28 +1099,30 @@ flowchart TB
 ```mermaid
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
 flowchart TB
-    A["2.0 PARSING ENGINE"]
-    A --> B["2.1 Standard Strategy"]
-    A --> C["2.2 Strict Strategy"]
-    A --> D["2.3 Compatibility Strategy"]
-    A --> E["2.4 RFC3986 Strategy"]
+    A["2.0 — PARSING ENGINE"]
+    A --> B["2.1 — Standard Strategy"]
+    A --> C["2.2 — Strict Strategy"]
+    A --> D["2.3 — Compatibility Strategy"]
+    A --> E["2.4 — RFC3986 Strategy"]
 
-    B --> F["2.5 Collect Parse Results"]
+    B --> F["2.5 — Collect Parse Results"]
     C --> F
     D --> F
     E --> F
 
-    F --> G["3.1 Compare Validity"]
-    F --> H["3.2 Compare Authority"]
-    F --> I["3.3 Compare Collection"]
-    F --> J["3.4 Compare Record Key"]
+    F --> G["3.1 — Compare Validation Status"]
+    F --> H["3.2 — Compare Authority"]
+    F --> I["3.3 — Compare Collection"]
+    F --> J["3.4 — Compare Record Key"]
 
-    G --> K["3.5 Build Conflict Records"]
+    G --> K["3.5 — Build Conflict Records"]
     H --> K
     I --> K
     J --> K
 
-    K --> L["4.0 Reconstruction and Reporting"]
+    K --> L["4.0 — Reconstruct URI"]
+    L --> M["5.0 — Report Results"]
+
 ```
 
 ---
@@ -1145,36 +1138,43 @@ flowchart TB
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
-flowchart LR
-    USER["User / Developer"]
+flowchart TB
+    USER["USER / DEVELOPER"]
+    SYSTEM(("AT URI<br/>COMPATIBILITY VALIDATOR"))
 
-    subgraph SYSTEM["AT URI COMPATIBILITY VALIDATOR"]
-        UC1(["Submit URI"])
-        UC2(["Run Test Corpus"])
-        UC3(["Select Parsing Strategy"])
-        UC4(["View Parse Result"])
-        UC5(["Compare Strategies"])
-        UC6(["Inspect Conflicts"])
-        UC7(["Check Round-Trip"])
-        UC8(["Analyse Encoding / Unicode"])
-        UC9(["Export Report"])
+    subgraph ACTIONS["AVAILABLE USER ACTIONS"]
+      direction TB
+      UC1(["Submit a single URI"])
+      UC2(["Run the test corpus"])
+      UC3(["Select a parsing strategy"])
+      UC4(["Compare parsing strategies"])
+      UC5(["Inspect conflicts"])
+      UC6(["Check round-trip preservation"])
+      UC7(["Analyse encoding and Unicode"])
+      UC8(["View parse and corpus results"])
+      UC9(["Export JSON / CSV / HTML report"])
     end
 
-    USER --> UC1
-    USER --> UC2
-    USER --> UC3
-    USER --> UC4
-    USER --> UC5
-    USER --> UC6
-    USER --> UC7
-    USER --> UC8
-    USER --> UC9
+    USER --> SYSTEM
+    SYSTEM --> UC1
+    SYSTEM --> UC2
+    SYSTEM --> UC3
+    SYSTEM --> UC4
+    SYSTEM --> UC5
+    SYSTEM --> UC6
+    SYSTEM --> UC7
+    SYSTEM --> UC8
+    SYSTEM --> UC9
 
-    UC1 --> UC4
-    UC2 --> UC5
-    UC5 --> UC6
-    UC4 --> UC7
-    UC6 --> UC9
+    UC1 --> UC8
+    UC2 --> UC4
+    UC3 --> UC4
+    UC4 --> UC5
+    UC5 --> UC8
+    UC6 --> UC8
+    UC7 --> UC8
+    UC8 --> UC9
+
 ```
 
 ## 17.2 Class Diagram
@@ -1182,6 +1182,7 @@ flowchart LR
 ```mermaid
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
 classDiagram
+    direction TB
     class ParseResult {
         +strategy
         +valid
@@ -1234,16 +1235,17 @@ classDiagram
         +api_report(fmt)
     }
 
-    Parser --> ParseResult
-    Analyzer --> Parser
-    Runner --> Parser
-    Runner --> Analyzer
-    Runner --> Corpus
-    Reports --> Runner
-    FlaskApp --> Parser
-    FlaskApp --> Analyzer
-    FlaskApp --> Runner
-    FlaskApp --> Reports
+    Parser --> ParseResult : creates
+    Analyzer --> Parser : compares parser outputs
+    Runner --> Parser : executes strategies
+    Runner --> Analyzer : analyses conflicts
+    Runner --> Corpus : loads cases
+    Reports --> Runner : formats results
+    FlaskApp --> Parser : validation requests
+    FlaskApp --> Analyzer : analysis requests
+    FlaskApp --> Runner : corpus requests
+    FlaskApp --> Reports : report downloads
+
 ```
 
 ## 17.3 Sequence Diagram
@@ -1252,55 +1254,61 @@ classDiagram
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
 sequenceDiagram
     actor User
-    participant UI as Flask Page
-    participant App as app.py
-    participant Parser as Parser Engine
-    participant Analyzer
-    participant Runner
-    participant Report
+    participant UI as Flask UI
+    participant App as app.py / API
+    participant Engine as Parser + Analyzer
+    participant Runner as Corpus Runner
+    participant Report as Report Builder
 
-    User->>UI: Enter URI / choose action
-    UI->>App: Send request
-    App->>Parser: Parse using selected strategy
-    Parser-->>App: ParseResult
-    App->>Analyzer: Compare strategies (if requested)
-    Analyzer-->>App: Conflict details
-    App->>Parser: Reconstruct URI
-    Parser-->>App: Reconstructed string
-    App-->>UI: JSON result
-    UI-->>User: Display analysis
+    User->>UI: Enter URI / select operation
+    UI->>App: Submit request
+    App->>Engine: Parse using selected strategy
+    Engine-->>App: ParseResult
+    App->>Engine: Compare strategies (when requested)
+    Engine-->>App: Conflict and encoding details
+    App->>Engine: Reconstruct parsed URI
+    Engine-->>App: Reconstructed value and exact-match status
+    App-->>UI: Return structured result
+    UI-->>User: Display validation analysis
 
     User->>UI: Request corpus report
-    UI->>App: GET report format
-    App->>Runner: run_corpus()
-    Runner-->>App: Summary and case results
+    UI->>App: Request report format
+    App->>Runner: Execute built-in corpus
+    Runner->>Engine: Parse and analyse each case
+    Engine-->>Runner: Case outcomes
+    Runner-->>App: Summary and case-level results
     App->>Report: Build JSON / CSV / HTML
-    Report-->>App: Report content
-    App-->>User: Download report
+    Report-->>App: Generated report
+    App-->>UI: Return report file
+    UI-->>User: Download report
+
 ```
 
 ## 17.4 Activity Diagram
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
-flowchart TD
-    A(["Start"]) --> B["Receive URI"]
-    B --> C{"Supported at:// prefix?"}
-    C -->|No| D["Return invalid parse result"]
-    C -->|Yes| E["Extract authority and path"]
-    E --> F["Apply selected strategy"]
-    F --> G["Validate components"]
-    G --> H["Return parse result"]
-    H --> I["Compare strategies"]
-    I --> J["Detect conflicts"]
-    J --> K["Reconstruct URI"]
-    K --> L{"Exact match?"}
-    L -->|Yes| M["Record exact round-trip"]
-    L -->|No| N["Record mismatch"]
-    D --> O["Display / report result"]
-    M --> O
-    N --> O
-    O --> P(["End"])
+flowchart TB
+    A(["START"]) --> B["Receive URI"]
+    B --> C{"Does input use the supported at:// prefix?"}
+    C -->|No| D["Create invalid parse result"]
+    C -->|Yes| E["Preserve original input"]
+    E --> F["Extract authority and path segments"]
+    F --> G["Apply selected parsing strategy"]
+    G --> H["Validate authority, collection and record key"]
+    H --> I["Create structured parse result"]
+    I --> J["Run remaining strategies"]
+    J --> K["Compare validation and extracted components"]
+    K --> L["Generate conflict details"]
+    L --> M["Reconstruct URI"]
+    M --> N{"Does reconstructed URI exactly match original?"}
+    N -->|Yes| O["Record exact round-trip"]
+    N -->|No| P["Record reconstruction mismatch"]
+    D --> Q["Display result / include in report"]
+    O --> Q
+    P --> Q
+    Q --> R(["END"])
+
 ```
 
 ---
@@ -1333,24 +1341,26 @@ The Flask application defines browser routes for the following pages:
 ```mermaid
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
 flowchart TB
-    HOME["HOME / DASHBOARD"]
+    HOME["HOME / MAIN DASHBOARD"]
     HOME --> A["Single URI Simulator"]
     HOME --> B["Strategy Comparison"]
     HOME --> C["Batch Testing"]
     HOME --> D["Corpus Library"]
     HOME --> E["Conflict Analysis"]
     HOME --> F["Round-Trip Analysis"]
-    HOME --> G["Encoding / Unicode"]
-    HOME --> H["Reports"]
+    HOME --> G["Encoding / Unicode Analysis"]
 
-    A --> I["Parse Result"]
-    B --> I
-    C --> I
-    D --> I
-    E --> I
-    F --> I
-    G --> I
-    I --> H
+    A --> RESULT["PARSE / ANALYSIS RESULTS"]
+    B --> RESULT
+    C --> RESULT
+    D --> RESULT
+    E --> RESULT
+    F --> RESULT
+    G --> RESULT
+
+    RESULT --> H["Reports"]
+    H --> J["Download JSON / CSV / HTML"]
+
 ```
 
 ---
@@ -1452,14 +1462,16 @@ The report endpoints return downloadable files.
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
-flowchart LR
+flowchart TB
     A["Clone repository"] --> B["Create virtual environment"]
-    B --> C["Install dependencies"]
-    C --> D["Run app.py"]
-    D --> E["Open localhost:5000"]
-    E --> F["Test individual URI / corpus"]
-    F --> G["Inspect results"]
-    G --> H["Download reports"]
+    B --> C["Install project dependencies"]
+    C --> D["Start the Flask application: python app.py"]
+    D --> E["Open the dashboard at localhost:5000"]
+    E --> F["Submit a URI or run the test corpus"]
+    F --> G["Inspect validation, conflicts and round-trip results"]
+    G --> H["Generate and download JSON / CSV / HTML reports"]
+    H --> I(["END"])
+
 ```
 
 ---
@@ -1671,7 +1683,7 @@ The corpus runner computes the status from the annotations and actual execution.
 4. **Network resolution:** Syntax validation does not prove that an account or record is available.
 5. **Transformation depth:** The final architecture's independent Transform A and Transform B reversible pipelines need further implementation.
 6. **Offset alignment:** Character-level interval/offset alignment is part of the target architecture, not a separate current module.
-7. **ML experiment:** The ML prediction module creates synthetic training examples. Its confidence output should not be treated as a standards-based validity result or a reliable generalization metric.
+7. **ML experiment:** The current ML prediction module is experimental and uses synthetic training examples. Its confidence output is not a standards-based validity result. A future supervised-learning extension will require a representative, correctly labelled URI dataset and evaluation on unseen cases before its predictions can be relied upon.
 8. **Dependency declaration:** The current `app.py` imports the ML module, which imports pandas, scikit-learn and joblib. These packages should be declared in `requirements.txt` or the ML import should be made optional.
 
 ## 23.2 Future improvements
@@ -1687,33 +1699,60 @@ The corpus runner computes the status from the annotations and actual execution.
 | Shield | Add policy checks for unsafe or ambiguous parser behaviour. |
 | Live resolution | Separately test whether a syntactically valid identifier resolves. |
 | CI regression tests | Run the corpus automatically after code changes. |
+| **ML Extension — supervised URI validation** | Train a model on a labelled dataset of valid, invalid and edge-case AT URIs so it can assess previously unseen or unpredictable URI patterns and flag likely validity issues for review. |
+
+### ML Extension — Supervised URI Validation
+
+A future **ML Extension** can complement the existing rule-based AT URI validator with a model trained using **supervised learning**. The model would learn from a representative dataset of labelled AT URIs, including valid examples, invalid examples and unusual edge cases. Useful input features could include URI structure, authority type (handle or DID), collection and record-key patterns, percent-encoding characteristics, Unicode properties and the outputs produced by the existing parsing strategies.
+
+Once trained and evaluated, the model could assess previously unseen or unpredictable URI patterns and predict whether an input is likely to be valid, invalid or require further review. This would help the system identify patterns that are not explicitly represented in the current test corpus and prioritize unfamiliar cases for inspection.
+
+The ML prediction should remain an **additional advisory layer**, not a replacement for AT Protocol syntax rules or deterministic parser checks. The existing validator should remain responsible for the final standards-based validation result, while uncertain or low-confidence predictions should be flagged for review. Model performance should be measured on separate test data containing unseen URI cases to reduce overfitting and assess generalization.
 
 ## 23.3 Future architecture direction
 
 ```mermaid
 %%{init: {'theme':'dark','themeVariables': {'darkMode': true,'background':'#07111F','primaryColor':'#102A43','primaryTextColor':'#E6F6FF','primaryBorderColor':'#22D3EE','lineColor':'#38BDF8','secondaryColor':'#0B2238','tertiaryColor':'#123B63','fontFamily':'ui-monospace, SFMono-Regular, Consolas, monospace'}}}%%
 flowchart TB
-    CURRENT["CURRENT VALIDATOR"]
-    CURRENT --> A["Independent parser adapters"]
-    CURRENT --> B["Specification Oracle"]
-    CURRENT --> C["Versioned test history"]
-    CURRENT --> D["Offset alignment"]
-    CURRENT --> E["Reversible transformations"]
-    CURRENT --> F["Optional live resolution"]
+    CURRENT["CURRENT RULE-BASED AT URI VALIDATOR"]
 
-    A --> G["ADVANCED COMPATIBILITY ENGINE"]
-    B --> G
-    C --> G
-    D --> G
-    E --> G
-    F --> G
+    subgraph EXTENSIONS["FUTURE COMPATIBILITY EXTENSIONS"]
+      direction TB
+      A["Independent RFC 3986 / WHATWG parser adapters"]
+      B["Specification Oracle"]
+      C["Versioned test and parser history"]
+      D["Character-offset alignment"]
+      E["Reversible AT-aware and generic transformations"]
+      F["Optional live identifier resolution"]
+    end
 
-    G --> H["Automated regression pipeline"]
-    H --> I["Compatibility reports over time"]
+    CURRENT --> A
+    CURRENT --> B
+    CURRENT --> C
+    CURRENT --> D
+    CURRENT --> E
+    CURRENT --> F
+
+    A --> ENGINE["ADVANCED COMPATIBILITY ENGINE"]
+    B --> ENGINE
+    C --> ENGINE
+    D --> ENGINE
+    E --> ENGINE
+    F --> ENGINE
+
+    CURRENT --> ML["ML EXTENSION<br/>Supervised learning on labelled AT URI data"]
+    ML --> PRED["Advisory prediction<br/>Likely valid / invalid / review"]
+    PRED --> ENGINE
+
+    ENGINE --> TESTS["AUTOMATED REGRESSION PIPELINE"]
+    TESTS --> REPORTS["COMPATIBILITY REPORTS OVER TIME"]
 
     style CURRENT fill:#1D4ED8,color:#fff
-    style G fill:#155E75,color:#fff
-    style I fill:#0E7490,color:#fff
+    style ENGINE fill:#155E75,color:#fff
+    style ML fill:#7C3AED,color:#fff
+    style PRED fill:#6D28D9,color:#fff
+    style REPORTS fill:#0E7490,color:#fff
+
 ```
 
 ---
